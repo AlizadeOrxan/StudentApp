@@ -1,0 +1,55 @@
+type Query {
+    getAllStudents: [StudentDto]
+    getStudentById(id: ID!): StudentDto
+}
+
+type Mutation {
+    createStudent(studentInput: StudentInput!): StudentDto
+    updateStudent(id: ID!, studentInput: StudentInput!): StudentDto
+    deleteStudent(id: ID!): Boolean
+}
+
+type StudentDto {
+    id: ID
+    firstName: String
+    lastName: String
+    age: Int
+    email: String
+}
+
+input StudentInput {
+    firstName: String!
+    lastName: String!
+    age: Int!
+    email: String!
+}
+
+
+
+
+#input StudentInput{
+#    firstname: String!
+#    lastname: String!
+#    age: Int!
+#    email: String!
+#}
+#
+#
+#type StudentDto{
+#    id: ID
+#    firstName: String
+#    lastName: String
+#    age: Int
+#    email: String
+#}
+#
+#type Query {
+#    getAllStudents: [StudentDto]
+#    getStudentById(id: ID!): StudentDto
+#}
+#
+#type Mutation {
+#    createStudent(studentInput: StudentInput!): StudentDto
+#    updateStudent(id: ID!, studentInput: StudentInput!): StudentDto
+#    deleteStudent(id: ID!): Boolean
+#}
