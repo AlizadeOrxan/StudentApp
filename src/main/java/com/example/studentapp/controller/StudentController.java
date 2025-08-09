@@ -4,6 +4,7 @@ package com.example.studentapp.controller;
 import com.example.studentapp.dto.StudentDto;
 import com.example.studentapp.service.StudentService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,14 +40,27 @@ public class StudentController {
     }
 
     @PutMapping("/{id}")
-    public StudentDto updateStudent(@PathVariable Long id , @RequestBody StudentDto studentDto) {
+    public StudentDto updateStudent(@PathVariable Long id, @RequestBody StudentDto studentDto) {
         return studentService.updateStudent(id, studentDto);
     }
 
 
     @DeleteMapping("/{id}")
     public void deleteStudent(@PathVariable Long id) {
-       studentService.deleteStudent(id);
+        studentService.deleteStudent(id);
     }
 
+
+//    @MessageMapping("/students")
+//    public void handleStudentMessage(StudentDto studentDto) {
+//        // Məlumatı qəbul edir və loga yazır.
+//        log.info("Veb səhifədən WebSocket vasitəsilə yeni Student məlumatı gəldi: {}", studentDto);
+//
+//        studentService.createStudent(studentDto);
+//
+//
+//    }
+
 }
+
+
