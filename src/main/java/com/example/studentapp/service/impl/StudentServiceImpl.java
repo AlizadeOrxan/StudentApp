@@ -5,11 +5,12 @@ import com.example.studentapp.dto.StudentDto;
 import com.example.studentapp.entity.Student;
 import com.example.studentapp.exception.StudentNotFoundException;
 import com.example.studentapp.repos.StduentRepo;
-import com.example.studentapp.service.EmailService;
 import com.example.studentapp.service.StudentService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,16 +19,22 @@ import java.util.stream.Collectors;
 @Service
 public class StudentServiceImpl implements StudentService {
 
-private static Logger log = LoggerFactory.getLogger(StudentServiceImpl.class);
+private static final Logger log = LoggerFactory.getLogger(StudentServiceImpl.class);
 
 
         private final StduentRepo studentRepo;
-        private final EmailService emailService;
+        private final KafkaTemplate<String , StudentDto> kafkaTemplate;
 
-    public StudentServiceImpl(StduentRepo studentRepo, EmailService emailService) {
+    public StudentServiceImpl(StduentRepo studentRepo, KafkaTemplate<String, StudentDto> kafkaTemplate) {
         this.studentRepo = studentRepo;
-        this.emailService = emailService;
+        this.kafkaTemplate = kafkaTemplate;
     }
+
+    @Value("${kafka.topic.student-created}")
+    private String studentCreatedTopic;
+
+    @Value("${kafka.topic.student-deleted}")
+    private String studentDeletedTopic;
 
     @Override
     public StudentDto createStudent(StudentDto studentDto) {
@@ -41,14 +48,10 @@ private static Logger log = LoggerFactory.getLogger(StudentServiceImpl.class);
 
             Student saved =  studentRepo.save(student);
 
-            String subject = "Melumat xarakterli mesaj";
-            String body = " Hormetli " + studentDto.getFirstName() + " " + studentDto.getLastName() + " sizin qeydiyyatiniz tamamlanmishdir ";
+            studentDto.setId(saved.getId());
 
-            emailService.sendEmail(saved.getEmail(), subject, body);
-            log.info("Email sent successfully {}" , saved.getEmail() );
-
-
-            log.info("Student created successfully {}, {}",studentDto.getFirstName(), studentDto.getLastName());
+            kafkaTemplate.send(studentCreatedTopic, studentDto);
+            log.info("Student created successfully and sent to Kafka  {}, {}",studentDto.getFirstName(), studentDto.getLastName());
             return new StudentDto(saved.getId(), saved.getFirstName(), saved.getLastName(), saved.getAge(), saved.getEmail());
 
     }
@@ -94,12 +97,11 @@ private static Logger log = LoggerFactory.getLogger(StudentServiceImpl.class);
         studentRepo.deleteById(id);
         log.warn("Student with id {} deleted successfully", id);
 
-        String subject = " Xeberdarliq mesaji ";
-        String body = " Sizin profiliniz silinmishdir " ;
+     //Melumati Kafkaya gondermeliyik
 
-        emailService.sendEmail(student.getEmail(), subject, body);
-
-
+        StudentDto deleted = new StudentDto(student.getId(), student.getFirstName(), student.getLastName(), student.getAge(), student.getEmail());
+        kafkaTemplate.send(studentDeletedTopic, deleted);
+        log.info("Silinme haqqinda melumat Kafkaya gonderildi : {} ", id);
 
 
     }
