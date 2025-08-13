@@ -12,9 +12,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        // İlk öncə mesaj broker prefiksləri konfiqurasiya olunmalıdır
         config.enableSimpleBroker("/topic");
-        // Sonra tətbiqin prefiksləri müəyyən edilməlidir
         config.setApplicationDestinationPrefixes("/app");
     }
 
