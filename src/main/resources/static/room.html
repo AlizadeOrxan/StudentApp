@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student WebSocket Listener</title>
+    <!-- SockJS ve Stomp kitapxanaları -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .disconnected-dot {
+            background-color: #e74c3c;
+        }
+
+        .connected-dot {
+            background-color: #27ae60;
+        }
+
+        #response-container {
+            background-color: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 8px;
+            text-align: left;
+            word-wrap: break-word;
+            min-height: 100px;
+            overflow-y: auto;
+        }
+
+        .response-title {
+            color: #34495e;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .student-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .student-table th, .student-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .student-table thead th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 500;
+        }
+
+        .student-table tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .student-table tbody tr:hover {
+            background-color: #e8f6ff;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Student Məlumatlarını Dinləmə otağı</h1>
+    <div class="connection-status">
+        <span id="status-dot" class="status-dot disconnected-dot"></span>
+        <span id="status-text">Qoşulur...</span>
+    </div>
+
+    <div id="response-container">
+        <div class="response-title">Real-time Cavab:</div>
+        <div style="overflow-x: auto;">
+            <table class="student-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Ad</th>
+                    <th>Soyad</th>
+                    <th>Yaş</th>
+                    <th>Email</th>
+                </tr>
+                </thead>
+                <tbody id="student-table-body">
+                <!-- Yeni student məlumatları bura əlavə olunacaq -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // WebSocket bağlantısı üçün dəyişənləri global olaraq təyin edirik
+    const socket = new SockJS('http://localhost:8088/ws');
+    let stompClient = null;
+
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+
+    // UI-ı bağlantı vəziyyətinə görə yeniləyir
+    function updateStatus(isConnected) {
+        if (isConnected) {
+            statusDot.classList.remove('disconnected-dot');
+            statusDot.classList.add('connected-dot');
+            statusText.textContent = `Qoşuldu`;
+        } else {
+            statusDot.classList.remove('connected-dot');
+            statusDot.classList.add('disconnected-dot');
+            statusText.textContent = 'Qoşulmayıb...';
+        }
+    }
+
+    // Otağa qoşulmaq üçün funksiya
+    function connect() {
+        console.log(`Bağlantı cəhdi...`);
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function(frame) {
+            console.log('Connected: ' + frame);
+            updateStatus(true);
+
+            // Məlumatları qəbul etmək üçün kanala abunə oluruq.
+            stompClient.subscribe(`/topic/students/updates`, function(message) {
+                const studentTableBody = document.getElementById('student-table-body');
+                const studentData = JSON.parse(message.body);
+
+                const existingRow = document.getElementById(`student-${studentData.id}`);
+
+                if (existingRow) {
+                    // Mövcud sətri yeniləyir
+                    existingRow.children[0].textContent = studentData.id || '-';
+                    existingRow.children[1].textContent = studentData.firstName || '-';
+                    existingRow.children[2].textContent = studentData.lastName || '-';
+                    existingRow.children[3].textContent = studentData.age || '-';
+                    existingRow.children[4].textContent = studentData.email || '-';
+                } else {
+                    // Yeni sətir yaradır
+                    const newRow = document.createElement('tr');
+                    newRow.id = `student-${studentData.id}`;
+
+                    const idCell = document.createElement('td');
+                    idCell.textContent = studentData.id || '-';
+                    newRow.appendChild(idCell);
+
+                    const firstNameCell = document.createElement('td');
+                    firstNameCell.textContent = studentData.firstName || '-';
+                    newRow.appendChild(firstNameCell);
+
+                    const lastNameCell = document.createElement('td');
+                    lastNameCell.textContent = studentData.lastName || '-';
+                    newRow.appendChild(lastNameCell);
+
+                    const ageCell = document.createElement('td');
+                    ageCell.textContent = studentData.age || '-';
+                    newRow.appendChild(ageCell);
+
+                    const emailCell = document.createElement('td');
+                    emailCell.textContent = studentData.email || '-';
+                    newRow.appendChild(emailCell);
+
+                    studentTableBody.prepend(newRow);
+                }
+            });
+        }, function(error) {
+            console.error('Connection failed:', error);
+            const responseContainer = document.getElementById('response-container');
+            responseContainer.innerHTML = `<div style="color: #c0392b; font-weight: 500;">Serverə qoşulma uğursuz oldu.</div>`;
+            updateStatus(false);
+        });
+    }
+
+    // Səhifə yüklənəndə avtomatik qoşulma funksiyasını çağırırıq
+    window.onload = function() {
+        connect();
+    };
+</script>
+</body>
+</html>

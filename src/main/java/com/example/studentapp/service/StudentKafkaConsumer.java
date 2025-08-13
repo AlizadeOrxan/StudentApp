@@ -4,6 +4,7 @@ import com.example.studentapp.dto.StudentDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,9 +12,11 @@ import org.springframework.stereotype.Service;
 public class StudentKafkaConsumer {
 
     private final EmailService emailService;
+private final SimpMessagingTemplate messagingTemplate;
 
-    public StudentKafkaConsumer(EmailService emailService) {
+    public StudentKafkaConsumer(EmailService emailService, SimpMessagingTemplate messagingTemplate) {
         this.emailService = emailService;
+        this.messagingTemplate = messagingTemplate;
     }
 
 //    @KafkaListener(topics = "student-created-topic", groupId = "student-group")
@@ -49,6 +52,7 @@ public class StudentKafkaConsumer {
     public void listenStudentCreatedGroup2(ConsumerRecord<String, StudentDto> record) {
         int partition = record.partition();
         long offset = record.offset();
+        StudentDto studentDto = record.value();
 
         log.info("Group-2: Received record Kafka for partition {} offset {}", partition, offset);
 
@@ -57,6 +61,8 @@ public class StudentKafkaConsumer {
 
         emailService.sendEmail(record.value().getEmail(), subject, body);
         log.info("Group-2: Email sent successfully {}", record.value().getEmail());
+
+        messagingTemplate.convertAndSend("/topic/students/updates",studentDto);
     }
 
 

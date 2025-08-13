@@ -25,7 +25,7 @@ public class WebSocketStudentController {
 
         log.info("Veb səhifədən WebSocket vasitəsilə yeni Student məlumatı gəldi: {}", studentDto);
 
-        // datalari bazaya yazmaq uchun cavab alinarken
+
         studentService.createStudent(studentDto);
 
         // Mesaji qoshulmush klientlere gonderiirk
