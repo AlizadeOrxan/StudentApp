@@ -19,16 +19,16 @@ public class WebSocketStudentController {
         this.messagingTemplate = messagingTemplate;
     }
 
-    // Bu metod WebSocket vasitəsilə "/app/students" endpoint-inə göndərilən mesajları idarə edir.
+    // Bu metod WebSocket ile "/app/students" endpoint-ie gonderilen msj-lari idare edecek
     @MessageMapping("/students")
     public void handleStudentMessage(StudentDto studentDto) {
         // Məlumatı qəbul edir və loga yazır.
         log.info("Veb səhifədən WebSocket vasitəsilə yeni Student məlumatı gəldi: {}", studentDto);
 
-        // Məlumatı verilənlər bazasına yazmaq üçün service layer-ə göndəririk.
+        // datani bazaya yaziriq
         studentService.createStudent(studentDto);
 
-        // Nümunə: Mesajı bütün qoşulmuş klientlərə geri göndərmək.
+        // mesajlari qoshulan client-lara geri gondereceyik
         messagingTemplate.convertAndSend("/topic/students/updates", studentDto);
     }
 }
