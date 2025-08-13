@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student WebSocket Client</title>
-    <!-- SockJS ve Stomp kitabxanaları -->
+    <!-- SockJS ve Stomp kitapxanaları -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <style>
@@ -106,28 +106,6 @@
             font-weight: 700;
             margin-bottom: 10px;
         }
-
-        #connection-status {
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: 500;
-            font-size: 14px;
-            color: #fff;
-            text-align: center;
-        }
-
-        .status-connecting {
-            background-color: #f39c12; /* Orange */
-        }
-
-        .status-connected {
-            background-color: #27ae60; /* Green */
-        }
-
-        .status-error {
-            background-color: #e74c3c; /* Red */
-        }
     </style>
 </head>
 <body>
@@ -139,25 +117,21 @@
     </div>
     <div class="form-group">
         <label for="firstName">Ad</label>
-        <input type="text" id="firstName" placeholder="Məsələn: Elvin">
+        <input type="text" id="firstName" placeholder="Məsələn: Nurlan">
     </div>
     <div class="form-group">
         <label for="lastName">Soyad</label>
-        <input type="text" id="lastName" placeholder="Məsələn: Kazimli">
+        <input type="text" id="lastName" placeholder="Məsələn: Alizade">
     </div>
     <div class="form-group">
         <label for="age">Yaş</label>
-        <input type="number" id="age" placeholder="Məsələn: 25">
+        <input type="number" id="age" placeholder="Məsələn: 18">
     </div>
     <div class="form-group">
         <label for="email">Email</label>
-        <input type="email" id="email" placeholder="Məsələn: elvin@example.com">
+        <input type="email" id="email" placeholder="Məsələn: nurlan@example.com">
     </div>
     <button class="send-button" onclick="sendStudentData()">Məlumatları Göndər</button>
-
-    <div id="connection-status" class="status-connecting">
-        Serverə qoşulur...
-    </div>
 
     <div id="response-box">
         <div class="response-title">Real-time Cavab:</div>
@@ -166,27 +140,31 @@
 </div>
 
 <script>
-    const statusElement = document.getElementById('connection-status');
-    const responseBox = document.getElementById('response');
-
-    // localhost:8088 sizin Spring Boot tətbiqinizin ünvanıdır.
+    // Serverin port nömrəsini 8088 edirik ki ws tanisin melumat gonderende
     const socket = new SockJS('http://localhost:8088/ws');
     const stompClient = Stomp.over(socket);
 
     stompClient.connect({}, function(frame) {
         console.log('Connected: ' + frame);
-        statusElement.className = 'status-connected';
-        statusElement.textContent = 'Serverə qoşulma uğurlu oldu!';
+
 
         stompClient.subscribe('/topic/students/updates', function(message) {
+            const responseBox = document.getElementById('response');
+
+            // Serverdən gələn JSON-u obyektə çeviririk
             const studentData = JSON.parse(message.body);
-            responseBox.textContent = "Serverdən cavab gəldi:\n" + JSON.stringify(studentData, null, 2);
+
+            // Cavab mesajını daha aydın formatda göstəririk.
+            responseBox.textContent = "Serverdən yeni Student məlumatı gəldi:\n"
+                + "ID: " + studentData.id + "\n"
+                + "Ad: " + studentData.firstName + "\n"
+                + "Soyad: " + studentData.lastName + "\n"
+                + "Yaş: " + studentData.age + "\n"
+                + "Email: " + studentData.email;
         });
     }, function(error) {
         console.error('Connection failed:', error);
-        statusElement.className = 'status-error';
-        statusElement.textContent = 'Serverə qoşulma uğursuz oldu. Konsolu yoxlayın.';
-        responseBox.textContent = "Serverə qoşulma uğursuz oldu. Zəhmət olmasa, serverin işlək olduğunu və ünvanın düzgün olduğunu yoxlayın.";
+        document.getElementById('response').textContent = "Serverə qoşulma uğursuz oldu.";
     });
 
     function sendStudentData() {
@@ -196,11 +174,7 @@
         const age = document.getElementById('age').value;
         const email = document.getElementById('email').value;
 
-        if (!stompClient || !stompClient.connected) {
-            responseBox.textContent = "Serverə qoşulma yoxdur, məlumat göndərilə bilmədi.";
-            return;
-        }
-
+        // StudentDto obyektini yaradırıq
         const studentDto = {
             id: studentId ? parseInt(studentId) : null,
             firstName: firstName,
@@ -209,10 +183,13 @@
             email: email
         };
 
-        // /app/students endpoint-inə məlumatı göndəririk
+        // "/app/students" endpoint-ine StudentDto obyektini JSON formatinda göndəririk
         stompClient.send("/app/students", {}, JSON.stringify(studentDto));
-        responseBox.textContent = "Məlumat göndərildi...";
+        document.getElementById('response').textContent = "Məlumat göndərildi...";
     }
 </script>
 </body>
 </html>
+
+
+
