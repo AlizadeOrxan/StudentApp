@@ -50,17 +50,6 @@ public class StudentController {
         studentService.deleteStudent(id);
     }
 
-
-//    @MessageMapping("/students")
-//    public void handleStudentMessage(StudentDto studentDto) {
-//        // Məlumatı qəbul edir və loga yazır.
-//        log.info("Veb səhifədən WebSocket vasitəsilə yeni Student məlumatı gəldi: {}", studentDto);
-//
-//        studentService.createStudent(studentDto);
-//
-//
-//    }
-
 }
 
 
