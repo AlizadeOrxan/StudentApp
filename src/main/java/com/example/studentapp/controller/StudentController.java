@@ -4,7 +4,6 @@ package com.example.studentapp.controller;
 import com.example.studentapp.dto.StudentDto;
 import com.example.studentapp.service.StudentService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
