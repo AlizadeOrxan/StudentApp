@@ -301,10 +301,3 @@ Sandbox-da bu sorğunu yoxlayın:
 
 GraphQL müasir tətbiqlərin mürəkkəb məlumat tələblərini qarşılamaq üçün güclü bir alternativdir. Xüsusilə fərqli client-lərin (veb, iOS, Android) fərqli məlumatlara ehtiyac duyduğu və ya mikroservis arxitekturasının
 istifadə olunduğu layihələrdə çox effektivdir.
-
-Öyrənmək üçün növbəti mövzular:
-* Apollo Client / Relay: Client tərəfində GraphQL-i idarə etmək üçün güclü kitabxanalar.
-* Authentication və Authorization: GraphQL-də istifadəçi icazələrinin idarə olunması.
-* Caching və Performance: Sorğuların optimallaşdırılması və N+1 problemi.
-* File Uploads: GraphQL ilə faylların yüklənməsi.
-* Federation: Böyük miqyaslı layihələrdə bir neçə GraphQL servisinin birləşdirilməsi.
